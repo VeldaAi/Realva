@@ -1,0 +1,284 @@
+// Realva — database schema
+// Changes: npx prisma migrate dev --name <change>
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Plan {
+  NONE
+  BASIC
+  PRO
+  TEAM
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  WON
+  LOST
+}
+
+enum DocumentType {
+  LISTING_DESCRIPTION
+  CONTRACT
+  ADDENDUM
+  FLYER
+  SOCIAL_POST
+  FOLLOW_UP
+  INSPECTION_SUMMARY
+  SHOWING_FEEDBACK
+  CMA
+  NEIGHBORHOOD_REPORT
+  COMPS
+}
+
+enum DeadlineType {
+  INSPECTION
+  FINANCING
+  APPRAISAL
+  CLOSING
+  TITLE
+  OTHER
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  DONE
+  FAILED
+}
+
+model User {
+  id                   String   @id @default(cuid())
+  email                String   @unique
+  passwordHash         String?
+  emailVerified        DateTime?
+  plan                 Plan     @default(NONE)
+  stripeCustomerId     String?  @unique
+  stripeSubscriptionId String?  @unique
+
+  brokerageId          String?
+  brokerage            Brokerage? @relation("BrokerageMembers", fields: [brokerageId], references: [id])
+  ownedBrokerage       Brokerage? @relation("BrokerageOwner")
+
+  // Branding
+  licenseNumber        String?
+  phone                String?
+  website              String?
+  headshotUrl          String?
+  logoUrl              String?
+  brandColor           String?
+  footerDisclaimer     String?
+
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  sessions             Session[]
+  documents            Document[]
+  leads                Lead[]
+  properties           Property[]
+  deadlines            Deadline[]
+  emailSequences       EmailSequence[]
+  openHouseVisitors    OpenHouseVisitor[]
+  jobs                 Job[]
+  apiLogs              ApiLog[]
+  accounts             Account[]
+  verifications        Verification[]
+
+  @@index([stripeCustomerId])
+}
+
+model Brokerage {
+  id         String   @id @default(cuid())
+  name       String
+  logoUrl    String?
+  brandColor String?
+  ownerId    String   @unique
+  owner      User     @relation("BrokerageOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members    User[]   @relation("BrokerageMembers")
+  createdAt  DateTime @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  providerId            String
+  accountId             String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([identifier])
+}
+
+model Document {
+  id          String       @id @default(cuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        DocumentType
+  title       String
+  contentJson Json
+  pdfUrl      String?
+  propertyId  String?
+  property    Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  createdAt   DateTime     @default(now())
+
+  @@index([userId, type])
+  @@index([createdAt])
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  email        String?
+  phone        String?
+  status       LeadStatus @default(NEW)
+  source       String?
+  notes        String?
+  sequences    EmailSequence[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([userId, status])
+}
+
+model Property {
+  id        String     @id @default(cuid())
+  userId    String
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  address   String
+  city      String
+  state     String
+  zip       String
+  dataJson  Json
+  deadlines Deadline[]
+  documents Document[]
+  visitors  OpenHouseVisitor[]
+  createdAt DateTime   @default(now())
+
+  @@index([userId])
+  @@index([city, state])
+}
+
+model Deadline {
+  id         String       @id @default(cuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String?
+  property   Property?    @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  type       DeadlineType
+  label      String
+  dueDate    DateTime
+  completed  Boolean      @default(false)
+  notifiedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  @@index([userId, dueDate])
+  @@index([completed, dueDate])
+}
+
+model EmailSequence {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  leadId      String
+  lead        Lead      @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  step        Int
+  subject     String
+  bodyHtml    String
+  scheduledAt DateTime
+  sentAt      DateTime?
+  cancelled   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+
+  @@index([scheduledAt, sentAt])
+  @@index([leadId, step])
+}
+
+model OpenHouseVisitor {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  name       String
+  email      String?
+  phone      String?
+  visitedAt  DateTime @default(now())
+
+  @@index([propertyId])
+  @@index([userId])
+}
+
+model Job {
+  id        String    @id @default(cuid())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  queue     String
+  name      String
+  payload   Json
+  status    JobStatus @default(QUEUED)
+  attempts  Int       @default(0)
+  error     String?
+  startedAt DateTime?
+  endedAt   DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([status, queue])
+}
+
+model ApiLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  route     String
+  level     String   // info | warn | error
+  message   String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([level, createdAt])
+}
