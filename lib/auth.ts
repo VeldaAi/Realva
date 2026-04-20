@@ -1,11 +1,15 @@
 import { betterAuth } from 'better-auth';
 import { prismaAdapter } from 'better-auth/adapters/prisma';
 import { prisma } from './db';
-import { env, envOptional } from './env';
+import { envOptional } from './env';
+
+// Placeholder is only used during `next build` when .env isn't in the
+// build container. The real secret from .env is present at runtime.
+const BUILD_PLACEHOLDER_SECRET = 'build-time-placeholder-secret-not-used-at-runtime';
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, { provider: 'postgresql' }),
-  secret: env('BETTER_AUTH_SECRET'),
+  secret: envOptional('BETTER_AUTH_SECRET') ?? BUILD_PLACEHOLDER_SECRET,
   baseURL: envOptional('BETTER_AUTH_URL') ?? envOptional('APP_URL') ?? 'http://localhost:3001',
   emailAndPassword: {
     enabled: true,
