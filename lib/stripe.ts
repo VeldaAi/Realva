@@ -8,7 +8,7 @@ let _cachedKey: string | null = null;
 export async function stripe(): Promise<Stripe> {
   const sk = await requireSetting('STRIPE_SECRET_KEY');
   if (!_stripe || _cachedKey !== sk) {
-    _stripe = new Stripe(sk, { apiVersion: '2024-09-30.acacia' });
+    _stripe = new Stripe(sk);
     _cachedKey = sk;
   }
   return _stripe;
