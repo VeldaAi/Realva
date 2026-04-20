@@ -92,9 +92,13 @@ docker compose exec app npx prisma migrate deploy
 docker compose exec app npm run prisma:seed
 ```
 
-This creates:
-- **Admin:** `admin@realva.dev` / `realva-admin-1234` (override with `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` in `.env`)
-- **Test user:** `test@realva.dev` / `realva1234` (with branding + 3 sample FL properties)
+This creates the single admin for your install:
+- **Email:** `jason@velda.ai`
+- **Temporary password:** `password123!`
+- **Role:** `ADMIN` (the only admin)
+- 3 sample FL properties are attached so the dashboard isn't empty on first login.
+
+**Change the password immediately** after first login. Override these defaults by setting `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` in `.env` before running the seed.
 
 ### 1g-alt. Pasting API keys in the admin UI
 
