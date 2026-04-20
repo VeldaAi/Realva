@@ -17,6 +17,11 @@ enum Plan {
   TEAM
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 enum LeadStatus {
   NEW
   CONTACTED
@@ -60,6 +65,7 @@ model User {
   email                String   @unique
   passwordHash         String?
   emailVerified        DateTime?
+  role                 Role     @default(USER)
   plan                 Plan     @default(NONE)
   stripeCustomerId     String?  @unique
   stripeSubscriptionId String?  @unique
@@ -91,6 +97,8 @@ model User {
   apiLogs              ApiLog[]
   accounts             Account[]
   verifications        Verification[]
+  chatSessions         ChatSession[]
+  showingFeedback      ShowingFeedback[]
 
   @@index([stripeCustomerId])
 }
@@ -196,6 +204,7 @@ model Property {
   deadlines Deadline[]
   documents Document[]
   visitors  OpenHouseVisitor[]
+  showingFeedback ShowingFeedback[]
   createdAt DateTime   @default(now())
 
   @@index([userId])
@@ -267,6 +276,53 @@ model Job {
   createdAt DateTime  @default(now())
 
   @@index([status, queue])
+}
+
+model Setting {
+  // Key-value store for admin-managed API keys and globals.
+  // Only admins read/write via /admin/apis. Values are stored
+  // encrypted if SETTING_ENCRYPTION_KEY is set, otherwise plain.
+  key       String   @id
+  value     String
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  userId    String?
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  title     String
+  createdAt DateTime      @default(now())
+  messages  ChatMessage[]
+
+  @@index([userId, createdAt])
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String      // user | assistant | system
+  content   String
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId, createdAt])
+}
+
+model ShowingFeedback {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  visitor    String
+  visitorEmail String?
+  responseJson Json
+  createdAt  DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
 
 model ApiLog {

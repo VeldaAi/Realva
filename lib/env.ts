@@ -1,7 +1,8 @@
 /**
- * Typed env accessor. Throws a descriptive error at call time so missing
- * keys surface in logs/responses rather than causing silent undefined reads.
+ * Typed env accessor. Synchronous for boot-time config (DATABASE_URL etc.);
+ * async for runtime keys that can be pasted into /admin/apis.
  */
+import { getSetting } from './settings';
 
 type EnvKey =
   | 'APP_URL'
@@ -28,13 +29,13 @@ type EnvKey =
   | 'MINIO_BUCKET'
   | 'MINIO_USE_SSL'
   | 'MINIO_PUBLIC_URL'
-  | 'RATE_LIMIT_PER_HOUR';
+  | 'RATE_LIMIT_PER_HOUR'
+  | 'ADMIN_EMAILS'
+  | 'SETTING_ENCRYPTION_KEY';
 
 export function env(key: EnvKey): string {
   const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing ${key} — add it to .env`);
-  }
+  if (!value) throw new Error(`Missing ${key} — add it to .env`);
   return value;
 }
 
@@ -43,3 +44,14 @@ export function envOptional(key: EnvKey): string | undefined {
 }
 
 export const appUrl = () => env('APP_URL');
+
+/** Runtime key: prefers /admin/apis setting, falls back to .env. */
+export async function runtimeKey(key: EnvKey): Promise<string> {
+  const v = await getSetting(key);
+  if (!v) throw new Error(`Missing ${key} — paste it in /admin/apis or set it in .env`);
+  return v;
+}
+
+export async function runtimeKeyOptional(key: EnvKey): Promise<string | undefined> {
+  return getSetting(key);
+}

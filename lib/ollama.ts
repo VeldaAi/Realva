@@ -1,8 +1,8 @@
 /**
- * Ollama wrapper — runs against a local/host Ollama instance.
- * 2x retry per spec; streaming disabled (we want full completions for DB persistence).
+ * Ollama wrapper. 3x retry per spec; streaming disabled for DB persistence.
+ * URL + model read at call time so /admin/apis hot-swaps without restart.
  */
-import { env, envOptional } from './env';
+import { getSetting } from './settings';
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -16,9 +16,15 @@ export interface GenerateOptions {
   timeoutMs?: number;
 }
 
+async function config() {
+  const url = (await getSetting('OLLAMA_URL')) ?? 'http://host.docker.internal:11434';
+  const model = (await getSetting('OLLAMA_MODEL')) ?? 'mistral';
+  return { url, model };
+}
+
 export async function chat(messages: ChatMessage[], opts: GenerateOptions = {}): Promise<string> {
-  const url = envOptional('OLLAMA_URL') ?? 'http://host.docker.internal:11434';
-  const model = opts.model ?? envOptional('OLLAMA_MODEL') ?? 'mistral';
+  const { url, model: defaultModel } = await config();
+  const model = opts.model ?? defaultModel;
   const timeoutMs = opts.timeoutMs ?? 120_000;
 
   const body: Record<string, unknown> = {
@@ -60,9 +66,20 @@ export async function chatJson<T>(messages: ChatMessage[], opts: GenerateOptions
   try {
     return JSON.parse(raw) as T;
   } catch {
-    // Fallback — extract the first {...} block
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error(`Ollama returned non-JSON: ${raw.slice(0, 200)}`);
     return JSON.parse(match[0]) as T;
+  }
+}
+
+/** Health probe — used by /admin/apis red/green indicator. */
+export async function ping(): Promise<{ ok: boolean; detail: string }> {
+  try {
+    const { url } = await config();
+    const resp = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(5000) });
+    if (!resp.ok) return { ok: false, detail: `HTTP ${resp.status}` };
+    return { ok: true, detail: 'Ollama reachable' };
+  } catch (e) {
+    return { ok: false, detail: (e as Error).message };
   }
 }
