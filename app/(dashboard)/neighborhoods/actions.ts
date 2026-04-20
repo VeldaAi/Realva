@@ -6,7 +6,7 @@ import { fetchCensus, fetchSchools } from '@/lib/neighborhood';
 import { chatJson } from '@/lib/ollama';
 import { neighborhoodNarrative } from '@/lib/prompts';
 import { renderPdf } from '@/lib/pdf';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function generateNeighborhood(formData: FormData) {
   const user = await requireUser();
@@ -46,7 +46,7 @@ export async function generateNeighborhood(formData: FormData) {
       userId: user.id,
       type: 'NEIGHBORHOOD_REPORT',
       title: `Neighborhood — ${neighborhood}`,
-      contentJson: { neighborhood, demographics, schools: schoolsData.schools, narrative },
+      contentJson: json({ neighborhood, demographics, schools: schoolsData.schools, narrative }),
       pdfUrl: pdf.url,
     },
   });

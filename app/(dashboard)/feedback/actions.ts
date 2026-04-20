@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth-helpers';
 import { chatJson } from '@/lib/ollama';
 import { showingFeedbackSummary } from '@/lib/prompts';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 import { getSetting } from '@/lib/settings';
 import { queue, QUEUES } from '@/lib/queues';
 
@@ -49,7 +49,7 @@ export async function summarize() {
       userId: user.id,
       type: 'SHOWING_FEEDBACK',
       title: `Showing feedback summary`,
-      contentJson: summary,
+      contentJson: json(summary),
     },
   });
 

@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth-helpers';
 import { rateLimit } from '@/lib/rate-limit';
 import { renderPdf } from '@/lib/pdf';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function fillContract(formData: FormData) {
   const user = await requireUser();
@@ -49,9 +49,9 @@ export async function fillContract(formData: FormData) {
       city: '',
       state: 'FL',
       zip: '',
-      dataJson: data,
+      dataJson: json(data),
     },
-    update: { dataJson: data },
+    update: { dataJson: json(data) },
   });
 
   const doc = await prisma.document.create({
@@ -59,7 +59,7 @@ export async function fillContract(formData: FormData) {
       userId: user.id,
       type: 'CONTRACT',
       title: `Contract — ${str('address')}`,
-      contentJson: data,
+      contentJson: json(data),
       pdfUrl: pdf.url,
       propertyId: property.id,
     },

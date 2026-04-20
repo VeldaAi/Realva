@@ -40,37 +40,34 @@ new Worker(
   { connection, concurrency: 4 },
 ).on('ready', () => logWorker(QUEUES.sequence));
 
-// ─── deadlines (nightly cron) ─────────────────────────────
-new Worker(
-  QUEUES.deadlines,
-  async () => {
-    const soon = new Date(Date.now() + 72 * 3600_000);
-    const deadlines = await prisma.deadline.findMany({
-      where: { completed: false, notifiedAt: null, dueDate: { lte: soon } },
-      include: { user: true, property: true },
-    });
-    for (const d of deadlines) {
+// ─── deadline sweep (runs every 6 hours) ──────────────────
+async function sweepDeadlines() {
+  const soon = new Date(Date.now() + 72 * 3600_000);
+  const deadlines = await prisma.deadline.findMany({
+    where: { completed: false, notifiedAt: null, dueDate: { lte: soon } },
+    include: { user: true, property: true },
+  });
+  for (const d of deadlines) {
+    try {
       await sendEmail({
         to: d.user.email,
         subject: `Deadline reminder: ${d.label}`,
         html: `<p>Hi ${d.user.email},</p><p><strong>${d.label}</strong> is due ${d.dueDate.toDateString()}${d.property ? ` for ${d.property.address}` : ''}.</p>`,
       });
       await prisma.deadline.update({ where: { id: d.id }, data: { notifiedAt: new Date() } });
+    } catch (err) {
+      console.error('[worker] deadline sweep send failed:', err);
     }
-  },
-  { connection, concurrency: 1 },
-).on('ready', () => logWorker(QUEUES.deadlines));
+  }
+  if (deadlines.length > 0) console.log(`[worker] swept ${deadlines.length} deadlines`);
+}
 
-// ─── nightly deadline cron ────────────────────────────────
-// Queue a "deadlines" job every 6 hours. The handler is idempotent (it
-// skips anything already notifiedAt != null) so duplicate triggers are safe.
-import { queue } from '../lib/queues';
-const cronQueue = queue(QUEUES.deadlines);
-await cronQueue.upsertJobScheduler(
-  'deadline-sweep',
-  { every: 6 * 60 * 60 * 1000 },
-  { name: 'sweep', data: {} },
-).catch(() => {});
+// Run immediately on boot, then every 6 hours.
+sweepDeadlines().catch((e) => console.error('[worker] initial sweep failed:', e));
+setInterval(
+  () => sweepDeadlines().catch((e) => console.error('[worker] sweep failed:', e)),
+  6 * 60 * 60 * 1000,
+);
 
 process.on('SIGTERM', async () => {
   await closeBrowser();

@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth-helpers';
 import { rateLimit } from '@/lib/rate-limit';
 import { chatJson } from '@/lib/ollama';
 import { socialPost } from '@/lib/prompts';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function generateSocial(formData: FormData) {
   const user = await requireUser();
@@ -32,7 +32,7 @@ export async function generateSocial(formData: FormData) {
       userId: user.id,
       type: 'SOCIAL_POST',
       title: `Social — ${property.address}`,
-      contentJson: { property, variants },
+      contentJson: json({ property, variants }),
     },
   });
 

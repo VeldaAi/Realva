@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type Stripe from 'stripe';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 import { stripe, planFromPriceId } from '@/lib/stripe';
 import { requireSetting } from '@/lib/settings';
 
@@ -86,7 +86,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
       route: 'stripe:invoice.payment_failed',
       level: 'warn',
       message: `Payment failed for customer ${customerId}`,
-      meta: { invoiceId: invoice.id, amount: invoice.amount_due },
+      meta: json({ invoiceId: invoice.id, amount: invoice.amount_due }),
     },
   });
 }

@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth-helpers';
 import { rateLimit } from '@/lib/rate-limit';
 import { chatJson } from '@/lib/ollama';
 import { counterOffer } from '@/lib/prompts';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function draftCounter(formData: FormData) {
   const user = await requireUser();
@@ -29,7 +29,7 @@ export async function draftCounter(formData: FormData) {
       userId: user.id,
       type: 'ADDENDUM',
       title: result.subject || 'Counter-offer addendum',
-      contentJson: { dealSummary, changes, tone, ...result },
+      contentJson: json({ dealSummary, changes, tone, ...result }),
     },
   });
 

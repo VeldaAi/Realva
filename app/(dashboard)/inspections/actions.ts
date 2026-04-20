@@ -6,7 +6,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { chatJson } from '@/lib/ollama';
 import { inspectionSummary } from '@/lib/prompts';
 import { renderPdf } from '@/lib/pdf';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function summarizeInspection(formData: FormData) {
   const user = await requireUser();
@@ -44,7 +44,7 @@ export async function summarizeInspection(formData: FormData) {
       userId: user.id,
       type: 'INSPECTION_SUMMARY',
       title: `Inspection — ${address}`,
-      contentJson: { address, summary },
+      contentJson: json({ address, summary }),
       pdfUrl: pdf.url,
     },
   });

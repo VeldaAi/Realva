@@ -5,7 +5,7 @@ import { requireUser } from '@/lib/auth-helpers';
 import { rateLimit } from '@/lib/rate-limit';
 import { chatJson } from '@/lib/ollama';
 import { leadFollowUp } from '@/lib/prompts';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function createLead(formData: FormData) {
   const user = await requireUser();
@@ -46,7 +46,7 @@ export async function generateFollowUp(leadId: string) {
       userId: user.id,
       type: 'FOLLOW_UP',
       title: `Follow-up — ${lead.name}`,
-      contentJson: { leadId, ...result },
+      contentJson: json({ leadId, ...result }),
     },
   });
 

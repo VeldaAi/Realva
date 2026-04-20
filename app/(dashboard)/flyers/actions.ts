@@ -5,7 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { chatJson } from '@/lib/ollama';
 import { flyerCopy } from '@/lib/prompts';
 import { renderPdf } from '@/lib/pdf';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function generateFlyer(formData: FormData) {
   const user = await requireUser();
@@ -41,7 +41,7 @@ export async function generateFlyer(formData: FormData) {
       userId: user.id,
       type: 'FLYER',
       title: `Flyer — ${property.address}`,
-      contentJson: { property, copy },
+      contentJson: json({ property, copy }),
       pdfUrl: pdf.url,
     },
   });

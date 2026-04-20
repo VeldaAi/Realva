@@ -4,7 +4,7 @@ import { requireUser } from '@/lib/auth-helpers';
 import { rateLimit } from '@/lib/rate-limit';
 import { chatJson } from '@/lib/ollama';
 import { listingDescription } from '@/lib/prompts';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function writeListing(formData: FormData) {
   const user = await requireUser();
@@ -35,7 +35,7 @@ export async function writeListing(formData: FormData) {
       userId: user.id,
       type: 'LISTING_DESCRIPTION',
       title: `Listing — ${specs.address}`,
-      contentJson: { specs, tone, variants },
+      contentJson: json({ specs, tone, variants }),
     },
   });
 

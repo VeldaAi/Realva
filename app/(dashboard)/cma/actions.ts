@@ -6,7 +6,7 @@ import { fetchComps } from '@/lib/rentcast';
 import { chatJson } from '@/lib/ollama';
 import { cmaNarrative } from '@/lib/prompts';
 import { renderPdf } from '@/lib/pdf';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function generateCMA(formData: FormData) {
   const user = await requireUser();
@@ -46,7 +46,7 @@ export async function generateCMA(formData: FormData) {
       userId: user.id,
       type: 'CMA',
       title: `CMA — ${subject.address}`,
-      contentJson: { subject, comps, narrative },
+      contentJson: json({ subject, comps, narrative }),
       pdfUrl: pdf.url,
     },
   });

@@ -5,7 +5,7 @@ import { requireUser } from '@/lib/auth-helpers';
 import { rateLimit } from '@/lib/rate-limit';
 import { fetchComps } from '@/lib/rentcast';
 import { renderPdf } from '@/lib/pdf';
-import { prisma } from '@/lib/db';
+import { prisma, json } from '@/lib/db';
 
 export async function pullComps(formData: FormData) {
   const user = await requireUser();
@@ -30,7 +30,7 @@ export async function pullComps(formData: FormData) {
       userId: user.id,
       type: 'COMPS',
       title: `Comps — ${address}`,
-      contentJson: { address, radius, comps },
+      contentJson: json({ address, radius, comps }),
       pdfUrl: pdf.url,
     },
   });
