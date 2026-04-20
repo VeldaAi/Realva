@@ -6,7 +6,7 @@
  *
  * Adding a new API = add one entry here + /admin/apis page picks it up automatically.
  */
-import { ping as pingOllama } from './ollama';
+import { ping as pingLlm } from './ollama'; // file kept for import stability — calls DeepSeek
 import { ping as pingStripe } from './stripe';
 import { ping as pingEmail } from './email';
 import { ping as pingRentCast } from './rentcast';
@@ -24,15 +24,14 @@ export interface ApiDefinition {
 
 export const APIS: ApiDefinition[] = [
   {
-    id: 'ollama',
-    label: 'Ollama (LLM)',
-    description: 'Local LLM that powers every AI feature. Run `ollama pull mistral` on your VPS.',
+    id: 'deepseek',
+    label: 'DeepSeek (LLM)',
+    description: 'Powers every AI feature. Cheap pay-per-token (~$0.30 per 500 docs). Get a key at platform.deepseek.com — $5 free credits on signup.',
     required: true,
     keys: [
-      { name: 'OLLAMA_URL', label: 'URL', placeholder: 'http://host.docker.internal:11434' },
-      { name: 'OLLAMA_MODEL', label: 'Model', placeholder: 'mistral' },
+      { name: 'DEEPSEEK_API_KEY', label: 'API key', placeholder: 'sk-...', secret: true },
     ],
-    ping: pingOllama,
+    ping: pingLlm,
   },
   {
     id: 'stripe',

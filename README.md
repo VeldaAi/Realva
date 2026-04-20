@@ -6,7 +6,7 @@ Live at: **https://realva.velda.ai**
 
 ## Stack
 
-Next.js 14 · Prisma + Postgres 16 · Redis 7 + BullMQ · Ollama (Mistral 7B) · Better-Auth · Stripe · Resend · MinIO · Puppeteer · Playwright · Docker Compose.
+Next.js 14 · Prisma + Postgres 16 · Redis 7 + BullMQ · DeepSeek (cloud LLM) · Better-Auth · Stripe · Resend · MinIO · Puppeteer · Playwright · Docker Compose.
 
 ---
 
@@ -31,15 +31,9 @@ curl -fsSL https://get.docker.com | sh
 systemctl enable --now docker
 ```
 
-### 1c. Install Ollama on the host (not in Docker)
+### 1c. (Nothing to install — DeepSeek is cloud)
 
-The app calls Ollama via `host.docker.internal`. Mistral 7B needs ~4 GB RAM.
-
-```bash
-curl -fsSL https://ollama.com/install.sh | sh
-systemctl enable --now ollama
-ollama pull mistral
-```
+Realva uses DeepSeek's hosted LLM API (`deepseek-chat`). No model download, no Ollama, no 4 GB RAM requirement. You'll paste your API key through the admin UI after deploy — get one free at **https://platform.deepseek.com/** ($5 of credits on signup, enough for ~8,000 documents).
 
 ### 1d. Clone the repo
 
@@ -239,7 +233,7 @@ docker compose exec app npx prisma migrate deploy
 | When you hit | Do this |
 | --- | --- |
 | PDF jobs queue up | `docker compose up -d --scale worker=2` |
-| Ollama is CPU-bound | Move Ollama to a second VPS with a GPU, set `OLLAMA_URL=http://other-vps-ip:11434`, open port 11434 on that box only to your app VPS |
+| DeepSeek rate-limited | Request higher limits on your DeepSeek account, or cache prompts |
 | Postgres is slow | Move Postgres to a managed provider, update `DATABASE_URL` |
 | MinIO disk fills up | Mount a larger volume at `/var/lib/docker/volumes/realva_minio_data` or swap to S3 |
 
@@ -259,7 +253,7 @@ npm run dev              # http://localhost:3001
 npm run worker
 ```
 
-Ollama must be running on your laptop: `ollama pull mistral && ollama serve`.
+Paste your DeepSeek API key into `.env` as `DEEPSEEK_API_KEY=sk-...` (or into `/admin/apis` after first login).
 
 ---
 
@@ -276,7 +270,7 @@ nginx (VPS:443) ──► Next.js app (VPS:3001)
                         ├── MinIO  (S3-compatible, docker volume)
                         ├── Resend (outbound email)
                         ├── Stripe (subscriptions + webhooks)
-                        └── Ollama (host process, port 11434)
+                        └── DeepSeek API (cloud — api.deepseek.com)
 ```
 
 Puppeteer & Playwright are bundled inside the app and worker images with `--no-sandbox` flags so they run in containers.
@@ -293,7 +287,7 @@ Full list is in `.env.example` with inline comments. The ones you **must** set b
 - `STRIPE_WEBHOOK_SECRET` (after step 3)
 - `RESEND_API_KEY`, `RESEND_FROM_EMAIL`
 - `RENTCAST_API_KEY`
-- `OLLAMA_URL` (leave default if you followed step 1c)
+- `DEEPSEEK_API_KEY` — or paste it in `/admin/apis` after first login
 - `APP_URL`, `NEXT_PUBLIC_APP_URL`, `BETTER_AUTH_URL` — all set to `https://realva.velda.ai`
 
 Optional:

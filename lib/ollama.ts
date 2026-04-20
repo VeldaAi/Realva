@@ -1,6 +1,11 @@
 /**
- * Ollama wrapper. 3x retry per spec; streaming disabled for DB persistence.
- * URL + model read at call time so /admin/apis hot-swaps without restart.
+ * LLM client — targets DeepSeek (OpenAI-compatible chat completions).
+ * File name is kept as ollama.ts so the 15 feature modules don't need
+ * to change their imports. The exported API is identical.
+ *
+ * DeepSeek endpoint: https://api.deepseek.com/v1/chat/completions
+ * Model: deepseek-chat
+ * Key is read from Settings (pasted via /admin/apis) with .env fallback.
  */
 import { getSetting } from './settings';
 
@@ -16,41 +21,52 @@ export interface GenerateOptions {
   timeoutMs?: number;
 }
 
-async function config() {
-  const url = (await getSetting('OLLAMA_URL')) ?? 'http://host.docker.internal:11434';
-  const model = (await getSetting('OLLAMA_MODEL')) ?? 'mistral';
-  return { url, model };
+const DEEPSEEK_URL = 'https://api.deepseek.com/v1/chat/completions';
+const DEFAULT_MODEL = 'deepseek-chat';
+
+async function apiKey(): Promise<string> {
+  const k = await getSetting('DEEPSEEK_API_KEY');
+  if (!k) throw new Error('Missing DEEPSEEK_API_KEY — paste it in /admin/apis');
+  return k;
 }
 
 export async function chat(messages: ChatMessage[], opts: GenerateOptions = {}): Promise<string> {
-  const { url, model: defaultModel } = await config();
-  const model = opts.model ?? defaultModel;
+  const key = await apiKey();
+  const model = opts.model ?? DEFAULT_MODEL;
   const timeoutMs = opts.timeoutMs ?? 120_000;
 
   const body: Record<string, unknown> = {
     model,
     messages,
     stream: false,
-    options: { temperature: opts.temperature ?? 0.7 },
+    temperature: opts.temperature ?? 0.7,
   };
-  if (opts.json) body.format = 'json';
+  if (opts.json) body.response_format = { type: 'json_object' };
 
   let lastErr: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const resp = await fetch(`${url}/api/chat`, {
+      const resp = await fetch(DEEPSEEK_URL, {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${key}`,
+        },
         body: JSON.stringify(body),
         signal: controller.signal,
       });
       clearTimeout(timer);
-      if (!resp.ok) throw new Error(`Ollama ${resp.status}: ${await resp.text().catch(() => '')}`);
-      const data = (await resp.json()) as { message?: { content?: string } };
-      const content = data.message?.content?.trim();
-      if (!content) throw new Error('Ollama returned empty completion');
+      if (resp.status === 429 || resp.status >= 500) {
+        throw new Error(`DeepSeek ${resp.status} (retryable): ${await resp.text().catch(() => '')}`);
+      }
+      if (!resp.ok) throw new Error(`DeepSeek ${resp.status}: ${await resp.text().catch(() => '')}`);
+      const data = (await resp.json()) as {
+        choices?: { message?: { content?: string } }[];
+      };
+      const content = data.choices?.[0]?.message?.content?.trim();
+      if (!content) throw new Error('DeepSeek returned empty completion');
       return content;
     } catch (err) {
       clearTimeout(timer);
@@ -58,7 +74,7 @@ export async function chat(messages: ChatMessage[], opts: GenerateOptions = {}):
       if (attempt < 2) await new Promise((r) => setTimeout(r, 2 ** attempt * 1000));
     }
   }
-  throw new Error(`Ollama call failed after 3 attempts: ${(lastErr as Error).message}`);
+  throw new Error(`DeepSeek call failed after 3 attempts: ${(lastErr as Error).message}`);
 }
 
 export async function chatJson<T>(messages: ChatMessage[], opts: GenerateOptions = {}): Promise<T> {
@@ -66,19 +82,33 @@ export async function chatJson<T>(messages: ChatMessage[], opts: GenerateOptions
   try {
     return JSON.parse(raw) as T;
   } catch {
+    // DeepSeek with response_format usually returns clean JSON. Fallback anyway.
     const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error(`Ollama returned non-JSON: ${raw.slice(0, 200)}`);
+    if (!match) throw new Error(`DeepSeek returned non-JSON: ${raw.slice(0, 200)}`);
     return JSON.parse(match[0]) as T;
   }
 }
 
-/** Health probe — used by /admin/apis red/green indicator. */
+/** Health probe for /admin/apis red/green dot. */
 export async function ping(): Promise<{ ok: boolean; detail: string }> {
   try {
-    const { url } = await config();
-    const resp = await fetch(`${url}/api/tags`, { signal: AbortSignal.timeout(5000) });
+    const key = await getSetting('DEEPSEEK_API_KEY');
+    if (!key) return { ok: false, detail: 'DEEPSEEK_API_KEY not set' };
+    // Minimal 1-token call to verify the key + reachability
+    const resp = await fetch(DEEPSEEK_URL, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: DEFAULT_MODEL,
+        messages: [{ role: 'user', content: 'ping' }],
+        max_tokens: 1,
+        stream: false,
+      }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (resp.status === 401) return { ok: false, detail: 'Invalid API key' };
     if (!resp.ok) return { ok: false, detail: `HTTP ${resp.status}` };
-    return { ok: true, detail: 'Ollama reachable' };
+    return { ok: true, detail: 'DeepSeek reachable' };
   } catch (e) {
     return { ok: false, detail: (e as Error).message };
   }
