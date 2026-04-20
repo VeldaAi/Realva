@@ -54,7 +54,7 @@ export async function fillContract(formData: FormData) {
     update: { dataJson: json(data) },
   });
 
-  const doc = await prisma.document.create({
+  await prisma.document.create({
     data: {
       userId: user.id,
       type: 'CONTRACT',
@@ -88,5 +88,4 @@ export async function fillContract(formData: FormData) {
   });
 
   redirect(pdf.url || `/dashboard`);
-  return doc;
 }
