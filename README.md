@@ -85,12 +85,28 @@ docker compose logs -f app     # Ctrl+C when you see "ready on port 3001"
 
 ### 1g. Run database migrations + seed
 
-Creates the schema and inserts a test user.
+Creates the schema and inserts an admin user + a test user.
 
 ```bash
 docker compose exec app npx prisma migrate deploy
 docker compose exec app npm run prisma:seed
 ```
+
+This creates:
+- **Admin:** `admin@realva.dev` / `realva-admin-1234` (override with `ADMIN_SEED_EMAIL` / `ADMIN_SEED_PASSWORD` in `.env`)
+- **Test user:** `test@realva.dev` / `realva1234` (with branding + 3 sample FL properties)
+
+### 1g-alt. Pasting API keys in the admin UI
+
+You don't need to put every key in `.env` at boot. After step 1g:
+
+1. Log in as the admin user
+2. Click **Admin** in the sidebar (only visible to admins)
+3. Open **API Keys**
+4. Paste your Stripe, Resend, RentCast keys into the fields, hit Save
+5. The red dot next to each service flips to green once it's reachable
+
+Stored keys are encrypted at rest if you set `SETTING_ENCRYPTION_KEY` (one-line `openssl rand -base64 32`).
 
 ### 1h. Sanity-check from the VPS itself
 

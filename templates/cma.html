@@ -1,0 +1,77 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>CMA</title>
+<style>
+:root { --brand: {{branding.brandColor}}; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif; color: #0f172a; margin: 0; line-height: 1.45; }
+.hdr { background: var(--brand); color: white; padding: 24px 40px; }
+.hdr h1 { margin: 0; font-size: 26px; }
+.hdr .sub { opacity: 0.85; margin-top: 4px; font-size: 12px; }
+.wrap { padding: 24px 40px; }
+h2 { color: var(--brand); font-size: 16px; margin-top: 22px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+.stat { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
+.stat .n { font-size: 18px; font-weight: 700; color: var(--brand); }
+.stat .l { font-size: 9px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+th, td { padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+th { background: #f8fafc; font-weight: 600; color: #334155; }
+.price-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px; margin: 16px 0; text-align: center; }
+.price-box .range { font-size: 24px; font-weight: 700; color: var(--brand); }
+.price-box .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #64748b; }
+.footer { margin-top: 30px; padding: 16px 40px; font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; }
+.watermark { position: fixed; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 9px; color: #94a3b8; }
+</style></head>
+<body>
+  <header class="hdr">
+    <h1>Comparative Market Analysis</h1>
+    <div class="sub">{{subject.address}}, {{subject.city}}, {{subject.state}} {{subject.zip}}</div>
+    <div class="sub">Prepared {{date generatedAt}} by {{branding.agentName}}</div>
+  </header>
+
+  <div class="wrap">
+    <h2>Executive summary</h2>
+    <p style="font-size: 12px;">{{narrative.executive_summary}}</p>
+
+    <div class="price-box">
+      <div class="label">Suggested list price range</div>
+      <div class="range">{{narrative.suggested_list_price_range}}</div>
+    </div>
+
+    <h2>Subject property</h2>
+    <div class="grid3">
+      <div class="stat"><div class="n">{{subject.beds}}</div><div class="l">Beds</div></div>
+      <div class="stat"><div class="n">{{subject.baths}}</div><div class="l">Baths</div></div>
+      <div class="stat"><div class="n">{{subject.sqft}}</div><div class="l">Sq Ft</div></div>
+    </div>
+
+    <h2>Comparable sales</h2>
+    <table>
+      <thead><tr><th>Address</th><th>Price</th><th>Beds/Baths</th><th>Sq Ft</th><th>$/sqft</th><th>Date</th></tr></thead>
+      <tbody>
+        {{#each comps}}
+        <tr>
+          <td>{{address}}</td>
+          <td>{{money price}}</td>
+          <td>{{bedrooms}} / {{bathrooms}}</td>
+          <td>{{squareFootage}}</td>
+          <td>{{#if pricePerSqft}}{{money pricePerSqft}}{{else}}—{{/if}}</td>
+          <td>{{#if lastSaleDate}}{{lastSaleDate}}{{else}}—{{/if}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+
+    <h2>Pricing strategy</h2>
+    <p style="font-size: 12px;">{{narrative.pricing_strategy}}</p>
+
+    <h2>Market conditions</h2>
+    <p style="font-size: 12px;">{{narrative.market_conditions}}</p>
+  </div>
+
+  <footer class="footer">
+    {{branding.agentName}} · {{branding.brokerageName}} · {{branding.phone}} · {{branding.email}}<br>
+    {{branding.footerDisclaimer}}
+  </footer>
+  {{#if watermark}}<div class="watermark">Powered by Realva · realva.velda.ai</div>{{/if}}
+</body>
+</html>

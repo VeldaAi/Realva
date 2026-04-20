@@ -1,26 +1,61 @@
 /**
- * Seed: 1 test user with branding, 3 sample listings.
- * Safe to re-run — uses upsert by email.
+ * Seed:
+ *   - One admin user (email from ADMIN_SEED_EMAIL, password ADMIN_SEED_PASSWORD)
+ *   - One test user with full branding (test@realva.dev / realva1234)
+ *   - 3 sample FL properties for the test user
+ * Safe to re-run — upserts by email.
  */
 import { PrismaClient } from '@prisma/client';
+import { scryptSync, randomBytes } from 'node:crypto';
 
 const prisma = new PrismaClient();
 
-async function main() {
+function hashPassword(password: string): string {
+  // Better-Auth uses scrypt. This matches its stored format: {salt}:{hash}
+  const salt = randomBytes(16).toString('hex');
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+}
+
+async function seedUser(email: string, password: string, role: 'USER' | 'ADMIN', branding = false) {
   const user = await prisma.user.upsert({
-    where: { email: 'test@realva.dev' },
-    update: {},
+    where: { email },
+    update: { role },
     create: {
-      email: 'test@realva.dev',
+      email,
+      role,
       plan: 'PRO',
-      licenseNumber: 'BK-3000000',
-      phone: '(305) 555-0100',
-      website: 'https://example-realtor.com',
-      brandColor: '#1d4ed8',
-      footerDisclaimer:
-        'Licensed Florida real estate professional. Information deemed reliable but not guaranteed.',
+      ...(branding && {
+        licenseNumber: 'BK-3000000',
+        phone: '(305) 555-0100',
+        website: 'https://example-realtor.com',
+        brandColor: '#1d4ed8',
+        footerDisclaimer: 'Licensed Florida real estate professional. Information deemed reliable but not guaranteed.',
+      }),
     },
   });
+
+  // Better-Auth stores credentials in the Account table
+  const hash = hashPassword(password);
+  await prisma.account.upsert({
+    where: { providerId_accountId: { providerId: 'credential', accountId: user.id } },
+    update: { password: hash },
+    create: {
+      userId: user.id,
+      providerId: 'credential',
+      accountId: user.id,
+      password: hash,
+    },
+  });
+
+  return user;
+}
+
+async function main() {
+  const adminEmail = process.env.ADMIN_SEED_EMAIL || 'admin@realva.dev';
+  const adminPwd = process.env.ADMIN_SEED_PASSWORD || 'realva-admin-1234';
+  const admin = await seedUser(adminEmail, adminPwd, 'ADMIN', true);
+  const test = await seedUser('test@realva.dev', 'realva1234', 'USER', true);
 
   const sample = [
     { address: '123 Ocean Dr', city: 'Miami Beach', state: 'FL', zip: '33139', data: { beds: 2, baths: 2, sqft: 1100, price: 825_000, year: 1998 } },
@@ -29,17 +64,16 @@ async function main() {
   ];
 
   for (const p of sample) {
-    const existing = await prisma.property.findFirst({
-      where: { userId: user.id, address: p.address },
-    });
-    if (!existing) {
+    const exists = await prisma.property.findFirst({ where: { userId: test.id, address: p.address } });
+    if (!exists) {
       await prisma.property.create({
-        data: { userId: user.id, address: p.address, city: p.city, state: p.state, zip: p.zip, dataJson: p.data },
+        data: { userId: test.id, address: p.address, city: p.city, state: p.state, zip: p.zip, dataJson: p.data },
       });
     }
   }
 
-  console.log(`Seeded user ${user.email} with ${sample.length} sample properties.`);
+  console.log(`✅ Seeded admin ${admin.email} (password: ${adminPwd})`);
+  console.log(`✅ Seeded test user test@realva.dev (password: realva1234), 3 properties`);
 }
 
 main()

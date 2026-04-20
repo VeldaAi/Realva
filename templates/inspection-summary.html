@@ -1,0 +1,56 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Inspection Summary</title>
+<style>
+:root { --brand: {{branding.brandColor}}; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #0f172a; margin: 0; line-height: 1.5; font-size: 12px; }
+.hdr { background: var(--brand); color: white; padding: 22px 40px; }
+.hdr h1 { margin: 0; font-size: 22px; }
+.wrap { padding: 22px 40px; }
+h2 { color: var(--brand); font-size: 15px; margin-top: 20px; }
+.tag { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 4px; margin-right: 6px; }
+.tag.c { background: #fee2e2; color: #991b1b; }
+.tag.m { background: #fef3c7; color: #92400e; }
+.tag.r { background: #d1fae5; color: #065f46; }
+ul { margin: 6px 0; padding-left: 18px; }
+.footer { margin-top: 28px; padding: 14px 40px; font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; }
+.watermark { position: fixed; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 9px; color: #94a3b8; }
+</style></head>
+<body>
+  <header class="hdr">
+    <h1>Home Inspection — Plain English Summary</h1>
+    <div style="opacity: 0.85; margin-top: 4px;">{{property.address}} · Prepared {{date generatedAt}}</div>
+  </header>
+  <div class="wrap">
+    <h2>Executive summary</h2>
+    <p>{{summary.executive_summary}}</p>
+
+    <h2><span class="tag c">Critical</span>Items that usually need attention now</h2>
+    {{#if summary.critical_items.length}}
+      <ul>{{#each summary.critical_items}}<li>{{this}}</li>{{/each}}</ul>
+    {{else}}
+      <p style="color: #64748b;">None noted.</p>
+    {{/if}}
+
+    <h2><span class="tag m">Moderate</span>Worth fixing soon</h2>
+    {{#if summary.moderate_items.length}}
+      <ul>{{#each summary.moderate_items}}<li>{{this}}</li>{{/each}}</ul>
+    {{else}}
+      <p style="color: #64748b;">None noted.</p>
+    {{/if}}
+
+    <h2><span class="tag r">Cosmetic</span>Minor / on your own time</h2>
+    {{#if summary.cosmetic_items.length}}
+      <ul>{{#each summary.cosmetic_items}}<li>{{this}}</li>{{/each}}</ul>
+    {{else}}
+      <p style="color: #64748b;">None noted.</p>
+    {{/if}}
+
+    <h2>Recommended next steps</h2>
+    <ul>{{#each summary.recommended_next_steps}}<li>{{this}}</li>{{/each}}</ul>
+  </div>
+  <footer class="footer">
+    {{branding.agentName}} · {{branding.brokerageName}} · {{branding.phone}}<br>
+    {{branding.footerDisclaimer}}
+  </footer>
+  {{#if watermark}}<div class="watermark">Powered by Realva · realva.velda.ai</div>{{/if}}
+</body></html>

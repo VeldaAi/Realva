@@ -1,0 +1,55 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Contract Summary</title>
+<style>
+:root { --brand: {{branding.brandColor}}; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #0f172a; margin: 0; line-height: 1.45; font-size: 12px; }
+.hdr { background: var(--brand); color: white; padding: 20px 40px; }
+.wrap { padding: 20px 40px; }
+h2 { color: var(--brand); font-size: 14px; margin-top: 16px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+th, td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; }
+th { background: #f8fafc; width: 42%; font-weight: 600; }
+.note { background: #fffbeb; border: 1px solid #fcd34d; padding: 10px; border-radius: 6px; font-size: 11px; margin-top: 16px; }
+.footer { margin-top: 28px; padding: 14px 40px; font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; }
+.watermark { position: fixed; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 9px; color: #94a3b8; }
+</style></head>
+<body>
+  <header class="hdr">
+    <div style="font-size: 11px; opacity: 0.85;">FL FAR/BAR AS-IS — Summary</div>
+    <div style="font-size: 18px; font-weight: 700;">{{property.address}}</div>
+  </header>
+  <div class="wrap">
+    <h2>Parties</h2>
+    <table>
+      <tr><th>Seller</th><td>{{parties.seller}}</td></tr>
+      <tr><th>Buyer</th><td>{{parties.buyer}}</td></tr>
+    </table>
+
+    <h2>Price & terms</h2>
+    <table>
+      <tr><th>Purchase price</th><td>{{money terms.purchasePrice}}</td></tr>
+      <tr><th>Initial deposit</th><td>{{money terms.initialDeposit}}</td></tr>
+      <tr><th>Additional deposit</th><td>{{money terms.additionalDeposit}}</td></tr>
+      <tr><th>Financing</th><td>{{terms.financingType}}{{#if terms.loanAmount}} · {{money terms.loanAmount}}{{/if}}</td></tr>
+      <tr><th>Closing date</th><td>{{date terms.closingDate}}</td></tr>
+    </table>
+
+    <h2>Contingencies & deadlines</h2>
+    <table>
+      <tr><th>Inspection period</th><td>{{terms.inspectionPeriodDays}} days</td></tr>
+      <tr><th>Financing contingency</th><td>{{date terms.financingDeadline}}</td></tr>
+      <tr><th>Title review</th><td>{{terms.titlePeriodDays}} days</td></tr>
+    </table>
+
+    <div class="note">
+      This is a Realva-generated summary designed to accompany the signed FL FAR/BAR AS-IS PDF.
+      It is <strong>not</strong> a substitute for the contract itself. All binding terms are
+      the ones on the signed form.
+    </div>
+  </div>
+  <footer class="footer">
+    {{branding.agentName}} · {{branding.brokerageName}} · License #{{branding.licenseNumber}}<br>
+    {{branding.footerDisclaimer}}
+  </footer>
+  {{#if watermark}}<div class="watermark">Powered by Realva · realva.velda.ai</div>{{/if}}
+</body></html>

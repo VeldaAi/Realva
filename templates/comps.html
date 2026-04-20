@@ -1,0 +1,43 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Comps Report</title>
+<style>
+:root { --brand: {{branding.brandColor}}; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #0f172a; margin: 0; line-height: 1.45; }
+.hdr { background: var(--brand); color: white; padding: 22px 40px; }
+.hdr h1 { margin: 0; font-size: 22px; }
+.wrap { padding: 20px 40px; }
+table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; }
+th, td { padding: 7px 8px; border-bottom: 1px solid #e2e8f0; text-align: left; }
+th { background: #f8fafc; font-weight: 600; }
+.footer { margin-top: 28px; padding: 16px 40px; font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; }
+.watermark { position: fixed; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 9px; color: #94a3b8; }
+</style></head>
+<body>
+  <header class="hdr">
+    <h1>Comparable sales — {{address}}</h1>
+    <div style="opacity: 0.85; font-size: 12px; margin-top: 4px;">{{count}} results as of {{date generatedAt}}</div>
+  </header>
+  <div class="wrap">
+    <table>
+      <thead><tr><th>Address</th><th>Price</th><th>Beds/Baths</th><th>Sq Ft</th><th>$/sqft</th><th>Year</th><th>Distance</th></tr></thead>
+      <tbody>
+        {{#each comps}}
+        <tr>
+          <td>{{address}}</td>
+          <td>{{money price}}</td>
+          <td>{{bedrooms}} / {{bathrooms}}</td>
+          <td>{{squareFootage}}</td>
+          <td>{{#if pricePerSqft}}{{money pricePerSqft}}{{else}}—{{/if}}</td>
+          <td>{{#if yearBuilt}}{{yearBuilt}}{{else}}—{{/if}}</td>
+          <td>{{#if distanceMiles}}{{distanceMiles}} mi{{else}}—{{/if}}</td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+  <footer class="footer">
+    {{branding.agentName}} · {{branding.brokerageName}} · {{branding.phone}}<br>
+    {{branding.footerDisclaimer}}
+  </footer>
+  {{#if watermark}}<div class="watermark">Powered by Realva · realva.velda.ai</div>{{/if}}
+</body></html>

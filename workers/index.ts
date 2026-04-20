@@ -61,6 +61,17 @@ new Worker(
   { connection, concurrency: 1 },
 ).on('ready', () => logWorker(QUEUES.deadlines));
 
+// ─── nightly deadline cron ────────────────────────────────
+// Queue a "deadlines" job every 6 hours. The handler is idempotent (it
+// skips anything already notifiedAt != null) so duplicate triggers are safe.
+import { queue } from '../lib/queues';
+const cronQueue = queue(QUEUES.deadlines);
+await cronQueue.upsertJobScheduler(
+  'deadline-sweep',
+  { every: 6 * 60 * 60 * 1000 },
+  { name: 'sweep', data: {} },
+).catch(() => {});
+
 process.on('SIGTERM', async () => {
   await closeBrowser();
   await closePlaywright();

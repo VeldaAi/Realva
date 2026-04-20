@@ -1,0 +1,33 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Open House Sign-In</title>
+<style>
+:root { --brand: {{branding.brandColor}}; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #0f172a; margin: 0; line-height: 1.45; text-align: center; }
+.hdr { background: var(--brand); color: white; padding: 30px 40px; }
+.hdr h1 { margin: 0; font-size: 30px; }
+.wrap { padding: 40px 20px; }
+.qr { display: inline-block; padding: 18px; border: 2px solid var(--brand); border-radius: 12px; background: white; }
+.qr img { display: block; width: 320px; height: 320px; }
+p { font-size: 15px; max-width: 420px; margin: 18px auto; }
+.url { font-family: monospace; font-size: 12px; color: #64748b; margin-top: 10px; }
+.agent { margin-top: 28px; font-size: 12px; color: #475569; }
+.agent strong { font-size: 14px; color: #0f172a; }
+.watermark { margin-top: 30px; font-size: 9px; color: #94a3b8; }
+</style></head>
+<body>
+  <header class="hdr">
+    <div style="font-size: 12px; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.1em;">Open House</div>
+    <h1>{{property.address}}</h1>
+  </header>
+  <div class="wrap">
+    <div class="qr"><img src="{{qrDataUrl}}" alt="QR sign-in"></div>
+    <p>Scan with your phone camera to sign in and receive updates on this listing.</p>
+    <div class="url">{{signInUrl}}</div>
+
+    <div class="agent">
+      <strong>{{branding.agentName}}</strong><br>
+      {{branding.brokerageName}} · {{branding.phone}}
+    </div>
+    {{#if watermark}}<div class="watermark">Powered by Realva · realva.velda.ai</div>{{/if}}
+  </div>
+</body></html>

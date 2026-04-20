@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Flyer</title>
+<style>
+:root { --brand: {{branding.brandColor}}; }
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif; color: #0f172a; margin: 0; line-height: 1.45; }
+.hero { background: var(--brand); color: white; padding: 36px 40px; }
+.hero h1 { font-size: 32px; margin: 0 0 8px; }
+.hero .price { font-size: 20px; opacity: 0.9; }
+.content { padding: 28px 40px; }
+.content h2 { font-size: 20px; margin: 0 0 10px; color: var(--brand); }
+.content .sub { font-size: 14px; color: #475569; margin-bottom: 18px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 16px 0 24px; }
+.stat { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; text-align: center; }
+.stat .n { font-size: 22px; font-weight: 700; color: var(--brand); }
+.stat .l { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.06em; }
+.bullets { list-style: none; padding: 0; margin: 0 0 18px; }
+.bullets li { padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+.agent { display: flex; gap: 14px; align-items: center; padding: 20px 40px; background: #f8fafc; border-top: 1px solid #e2e8f0; }
+.agent img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+.agent .info strong { font-size: 14px; display: block; }
+.agent .info span { font-size: 11px; color: #475569; }
+.watermark { position: fixed; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 9px; color: #94a3b8; }
+.footer { padding: 14px 40px; font-size: 9px; color: #94a3b8; text-align: center; }
+</style></head>
+<body>
+  <section class="hero">
+    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.8;">{{property.city}}, {{property.state}}</div>
+    <h1>{{copy.headline}}</h1>
+    <div class="price">{{money property.price}}</div>
+  </section>
+
+  <section class="content">
+    <h2>{{property.address}}</h2>
+    <div class="sub">{{copy.subheadline}}</div>
+
+    <div class="grid">
+      <div class="stat"><div class="n">{{property.beds}}</div><div class="l">Bedrooms</div></div>
+      <div class="stat"><div class="n">{{property.baths}}</div><div class="l">Bathrooms</div></div>
+      <div class="stat"><div class="n">{{property.sqft}}</div><div class="l">Sq Ft</div></div>
+    </div>
+
+    <p>{{copy.body}}</p>
+
+    <ul class="bullets">
+      {{#each copy.bullets}}<li>✓ {{this}}</li>{{/each}}
+    </ul>
+
+    <p style="margin-top: 18px; font-weight: 600; color: var(--brand);">{{copy.cta}}</p>
+  </section>
+
+  <section class="agent">
+    {{#if branding.headshotUrl}}<img src="{{branding.headshotUrl}}" alt="">{{/if}}
+    <div class="info">
+      <strong>{{branding.agentName}}</strong>
+      <span>{{branding.brokerageName}}{{#if branding.licenseNumber}} · License #{{branding.licenseNumber}}{{/if}}</span>
+      <span>{{branding.phone}}{{#if branding.email}} · {{branding.email}}{{/if}}</span>
+    </div>
+  </section>
+
+  <footer class="footer">{{branding.footerDisclaimer}}</footer>
+  {{#if watermark}}<div class="watermark">Powered by Realva · realva.velda.ai</div>{{/if}}
+</body>
+</html>

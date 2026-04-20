@@ -1,0 +1,54 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Neighborhood Report</title>
+<style>
+:root { --brand: {{branding.brandColor}}; }
+body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; color: #0f172a; margin: 0; line-height: 1.5; }
+.hdr { background: var(--brand); color: white; padding: 24px 40px; }
+.hdr h1 { margin: 0; }
+.wrap { padding: 22px 40px; }
+h2 { color: var(--brand); margin-top: 22px; font-size: 16px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 12px 0; }
+.kpi { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; }
+.kpi .l { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; }
+.kpi .n { font-size: 16px; font-weight: 700; color: var(--brand); margin-top: 2px; }
+.footer { margin-top: 28px; padding: 16px 40px; font-size: 9px; color: #64748b; border-top: 1px solid #e2e8f0; }
+.watermark { position: fixed; bottom: 14px; left: 0; right: 0; text-align: center; font-size: 9px; color: #94a3b8; }
+</style></head>
+<body>
+  <header class="hdr">
+    <h1>{{neighborhood}} — Neighborhood Report</h1>
+    <div style="opacity: 0.85; font-size: 12px; margin-top: 4px;">Prepared {{date generatedAt}}</div>
+  </header>
+  <div class="wrap">
+    <p>{{narrative.overview}}</p>
+
+    <h2>Key stats</h2>
+    <div class="grid">
+      <div class="kpi"><div class="l">Median household income</div><div class="n">{{money demographics.medianIncome}}</div></div>
+      <div class="kpi"><div class="l">Median home value</div><div class="n">{{money demographics.medianHomeValue}}</div></div>
+      <div class="kpi"><div class="l">Population</div><div class="n">{{demographics.population}}</div></div>
+    </div>
+
+    <h2>Demographics</h2>
+    <p>{{narrative.demographics}}</p>
+
+    <h2>Schools</h2>
+    <p>{{narrative.schools}}</p>
+    {{#if schools.length}}
+    <ul>
+      {{#each schools}}<li><strong>{{name}}</strong> — {{level}}{{#if rating}} · rating {{rating}}/10{{/if}}</li>{{/each}}
+    </ul>
+    {{/if}}
+
+    <h2>Safety</h2>
+    <p>{{narrative.safety}}</p>
+
+    <h2>Buyer considerations</h2>
+    <ul>{{#each narrative.considerations}}<li>{{this}}</li>{{/each}}</ul>
+  </div>
+  <footer class="footer">
+    Data: US Census ACS{{#if schoolsSource}} · {{schoolsSource}}{{/if}}. {{branding.footerDisclaimer}}<br>
+    {{branding.agentName}} · {{branding.brokerageName}} · {{branding.phone}}
+  </footer>
+  {{#if watermark}}<div class="watermark">Powered by Realva · realva.velda.ai</div>{{/if}}
+</body></html>
