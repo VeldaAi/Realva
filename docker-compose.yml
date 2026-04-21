@@ -59,7 +59,7 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
-    command: sh -c "npx prisma migrate deploy && node server.js"
+    command: sh -c "prisma migrate deploy && node server.js"
 
   worker:
     build:

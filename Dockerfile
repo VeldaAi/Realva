@@ -42,6 +42,12 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/templates ./templates
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
+
+# Install the Prisma CLI globally at the exact version we build against.
+# Without this, `npx prisma migrate deploy` in the startup command pulls
+# the latest Prisma (v7+) off the network, which rejects the v5 schema.
+RUN npm install -g prisma@5.22.0
 
 EXPOSE 3001
 ENV PORT=3001
