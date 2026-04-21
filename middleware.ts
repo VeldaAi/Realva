@@ -26,8 +26,11 @@ export function middleware(req: NextRequest) {
   if (!PROTECTED.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
     return NextResponse.next();
   }
-  // Cheap check — Better-Auth cookie name defaults to 'realva.session_token' (see auth.ts cookiePrefix)
-  const cookie = req.cookies.get('realva.session_token')?.value;
+  // Cheap presence check — cookie name is `__Secure-realva.session_token` in
+  // production (when useSecureCookies is true) and `realva.session_token` in dev.
+  const cookie =
+    req.cookies.get('__Secure-realva.session_token')?.value ??
+    req.cookies.get('realva.session_token')?.value;
   if (!cookie) {
     const login = req.nextUrl.clone();
     login.pathname = '/login';

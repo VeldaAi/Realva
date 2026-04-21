@@ -34,16 +34,23 @@ export default function LoginPage() {
           <input
             type="email"
             required
+            autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
           />
         </div>
         <div>
-          <label className="mb-1 block text-sm font-medium">Password</label>
+          <div className="mb-1 flex items-center justify-between">
+            <label className="block text-sm font-medium">Password</label>
+            <Link href="/forgot-password" className="text-xs text-slate-600 underline hover:text-slate-900">
+              Forgot password?
+            </Link>
+          </div>
           <input
             type="password"
             required
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full rounded border border-slate-300 px-3 py-2 text-sm focus:border-slate-900 focus:outline-none"
@@ -58,12 +65,18 @@ export default function LoginPage() {
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
       </form>
-      <p className="mt-6 text-center text-xs text-slate-600">
-        No account?{' '}
-        <Link href="/signup" className="font-medium text-slate-900 underline">
-          Create one
-        </Link>
-      </p>
+      <div className="mt-6 space-y-2 text-center text-xs text-slate-600">
+        <p>
+          No account?{' '}
+          <Link href="/signup" className="font-medium text-slate-900 underline">
+            Create one
+          </Link>
+        </p>
+        <p className="pt-2 text-slate-500">
+          Forgot your email? It's the address you signed up with — your email{' '}
+          <em>is</em> your username.
+        </p>
+      </div>
     </>
   );
 }

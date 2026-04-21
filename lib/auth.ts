@@ -35,6 +35,25 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     autoSignIn: true,
     minPasswordLength: 8,
+    sendResetPassword: async ({ user, url }) => {
+      // Always log the link to the container so an admin can recover
+      // without email configured. If RESEND_API_KEY is set, also email it.
+      console.log('[auth] password reset link for', user.email, '→', url);
+      try {
+        const { getSetting } = await import('./settings');
+        const key = await getSetting('RESEND_API_KEY');
+        if (key) {
+          const { sendEmail } = await import('./email');
+          await sendEmail({
+            to: user.email,
+            subject: 'Reset your Realva password',
+            html: `<p>Hi,</p><p>Click the link below to reset your Realva password:</p><p><a href="${url}">${url}</a></p><p>This link expires in 1 hour. If you didn't request this, ignore the email.</p>`,
+          });
+        }
+      } catch (err) {
+        console.error('[auth] sendResetPassword email failed:', err);
+      }
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 days
